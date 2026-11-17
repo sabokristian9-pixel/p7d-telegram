@@ -1,0 +1,36 @@
+name: P7D -> Telegram
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # každých 15 minút (GitHub to občas o pár minút oneskorí)
+  workflow_dispatch:          # tlačidlo "Run workflow" na ručné spustenie
+
+permissions:
+  contents: write
+
+concurrency:
+  group: p7d
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Skontroluj nové články
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python p7d_telegram.py
+
+      - name: Ulož zoznam odoslaných
+        run: |
+          git config user.name "p7d-bot"
+          git config user.email "p7d-bot@users.noreply.github.com"
+          git add seen.json
+          git diff --cached --quiet || (git commit -m "Aktualizácia seen.json" && git push)
