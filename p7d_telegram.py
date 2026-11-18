@@ -8,12 +8,17 @@ import json
 import os
 import re
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 
-BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]  # napr. @mojkanal alebo -100123...
+# .strip() odstráni medzery/nové riadky, ktoré sa ľahko skopírujú do Secrets;
+# odstráni aj prípadné <> a predponu "bot" (časté chyby pri kopírovaní tokenu)
+BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"].strip().strip("<>").strip()
+if BOT_TOKEN.lower().startswith("bot"):
+    BOT_TOKEN = BOT_TOKEN[3:]
+CHAT_ID = os.environ["TELEGRAM_CHAT_ID"].strip()  # napr. @mojkanal alebo -100123...
 
 BASE = "https://plus7dni.pluska.sk"
 RSS_URL = "https://nmh-production02-dfs.fra1.digitaloceanspaces.com/rss/echobox/rss-echobox-plus7.xml"
@@ -83,8 +88,12 @@ def send(item):
         "parse_mode": "HTML",
     }).encode()
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    with urllib.request.urlopen(url, data=data, timeout=30) as r:
-        r.read()
+    try:
+        with urllib.request.urlopen(url, data=data, timeout=30) as r:
+            r.read()
+    except urllib.error.HTTPError as e:
+        # Telegram v odpovedi napíše presný dôvod (zlý token, chat not found, ...)
+        raise RuntimeError(f"Telegram {e.code}: {e.read().decode('utf-8', 'replace')}") from None
 
 
 def main():
