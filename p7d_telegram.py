@@ -16,7 +16,7 @@ BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]  # napr. @mojkanal alebo -100123...
 
 BASE = "https://plus7dni.pluska.sk"
-RSS_URL = BASE + "/rss.xml"
+RSS_URL = "https://nmh-production02-dfs.fra1.digitaloceanspaces.com/rss/echobox/rss-echobox-plus7.xml"
 LIST_URL = BASE + "/r/novinky"
 SEEN_FILE = "seen.json"
 MAX_PER_RUN = 10  # ochrana pred zahltením kanála
