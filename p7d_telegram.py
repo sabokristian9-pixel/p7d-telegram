@@ -46,8 +46,9 @@ def from_rss():
     for it in root.iter("item"):
         link = (it.findtext("link") or it.findtext("guid") or "").strip()
         title = (it.findtext("title") or "").strip()
+        desc = (it.findtext("description") or "").strip()
         if link.startswith("http"):
-            items.append({"url": link, "title": title})
+            items.append({"url": link, "title": title, "desc": desc})
     if not items:
         raise ValueError("RSS je prázdne")
     return items
@@ -81,7 +82,9 @@ def from_page():
 
 
 def send(item):
-    text = f"<b>{html.escape(item['title'])}</b>\n{item['url']}" if item["title"] else item["url"]
+    # do správy ide popis (perex) článku; ak chýba, použije sa titulok
+    body = item.get("desc") or item["title"]
+    text = f"{html.escape(body)}\n{item['url']}" if body else item["url"]
     data = urllib.parse.urlencode({
         "chat_id": CHAT_ID,
         "text": text,
